@@ -88,11 +88,11 @@ class VenomAppbar extends StatelessWidget {
   final VoidCallback onHoverExit;
 
   const VenomAppbar({
-    Key? key,
+    super.key,
     required this.title,
     required this.onHoverEnter,
     required this.onHoverExit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +119,7 @@ class VenomAppbar extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -194,11 +194,11 @@ class VenomWindowButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   const VenomWindowButton({
-    Key? key,
+    super.key,
     required this.color,
     required this.icon,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   State<VenomWindowButton> createState() => _VenomWindowButtonState();
@@ -227,7 +227,7 @@ class _VenomWindowButtonState extends State<VenomWindowButton> {
                 _isHovered
                     ? [
                       BoxShadow(
-                        color: widget.color.withOpacity(0.8),
+                        color: widget.color.withValues(alpha: 0.8),
                         blurRadius: 10, // زيادة التوهج قليلاً
                         spreadRadius: 2,
                       ),
@@ -241,7 +241,7 @@ class _VenomWindowButtonState extends State<VenomWindowButton> {
               child: Icon(
                 widget.icon,
                 size: 10,
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
               ),
             ),
           ),

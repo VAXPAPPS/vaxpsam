@@ -25,7 +25,7 @@ class Sidebar extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 16,
             offset: const Offset(4, 0),
           ),
@@ -37,10 +37,10 @@ class Sidebar extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E).withOpacity(0.6),
+              color: const Color(0xFF1E1E1E).withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -52,23 +52,11 @@ class Sidebar extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
-                      Container(
-                        // padding: const EdgeInsets.all(2),
-                        // decoration: BoxDecoration(
-                        //   color: const Color.fromARGB(
-                        //     66,
-                        //     0,
-                        //     0,
-                        //     0,
-                        //   ).withOpacity(0.2),
-                        //   borderRadius: BorderRadius.circular(8),
-                        // ),
-                        child: Image.asset(
-                          'assets/logo.png',
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.contain,
-                        ),
+                      Image.asset(
+                        'assets/logo.png',
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(width: 12),
                       const Text(
@@ -119,7 +107,7 @@ class Sidebar extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         width: 1,
                       ),
                     ),
@@ -150,13 +138,13 @@ class Sidebar extends StatelessWidget {
             decoration: BoxDecoration(
               color:
                   isSelected
-                      ? macAppStoreBlue.withOpacity(0.15)
+                      ? macAppStoreBlue.withValues(alpha: 0.15)
                       : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color:
                     isSelected
-                        ? macAppStoreBlue.withOpacity(0.3)
+                        ? macAppStoreBlue.withValues(alpha: 0.3)
                         : Colors.transparent,
                 width: 1,
               ),
@@ -207,13 +195,13 @@ class Sidebar extends StatelessWidget {
           decoration: BoxDecoration(
             color:
                 isConsoleOpen
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color:
                   isConsoleOpen
-                      ? Colors.white.withOpacity(0.2)
+                      ? Colors.white.withValues(alpha: 0.2)
                       : Colors.transparent,
             ),
           ),
@@ -243,7 +231,7 @@ class Sidebar extends StatelessWidget {
                 child: Text(
                   '~',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 10,
                     fontFamily: 'monospace',
                   ),
