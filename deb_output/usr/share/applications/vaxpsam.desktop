@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=vaxpsam
+Comment=Flutter Application - vaxpsam
+Exec=/usr/bin/vaxpsam
+Icon=/usr/share/icons/hicolor/256x256/apps/vaxpsam.png
+Terminal=false
+Categories=Utility;Development;
+Keywords=settings;preferences;configuration;control;options;

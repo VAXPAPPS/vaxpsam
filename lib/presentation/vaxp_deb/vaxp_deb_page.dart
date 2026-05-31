@@ -28,8 +28,78 @@ class _VaxpDebPageState extends State<VaxpDebPage>
   final _nameController = TextEditingController();
   final _commentController = TextEditingController();
   final _categoriesController = TextEditingController();
+  final _keywordsController = TextEditingController();
+  final _mimeTypeController = TextEditingController();
   String _selectedTerminal = 'false';
   String _autoExecPath = '';
+  String? _selectedAppType;
+
+  // Presets map: app type => { keywords, mimeType, categories }
+  static const Map<String, Map<String, String>> _appTypePresets = {
+    'File Manager': {
+      'icon': 'folder',
+      'keywords': 'filemanager;files;explorer;browser;',
+      'mimeType': 'inode/directory;',
+      'categories': 'System;FileTools;FileManager;',
+    },
+    'Video Player': {
+      'icon': 'movie',
+      'keywords': 'video;player;media;movie;stream;',
+      'mimeType':
+          'video/mp4;video/x-matroska;video/x-msvideo;video/webm;video/ogg;video/mpeg;',
+      'categories': 'AudioVideo;Video;Player;',
+    },
+    'Audio Player': {
+      'icon': 'music_note',
+      'keywords': 'audio;music;player;sound;mp3;',
+      'mimeType': 'audio/mpeg;audio/ogg;audio/flac;audio/wav;audio/aac;',
+      'categories': 'AudioVideo;Audio;Player;',
+    },
+    'Store': {
+      'icon': 'store',
+      'keywords': 'store;software;install;packages;apps;',
+      'mimeType': 'application/vnd.debian.binary-package;',
+      'categories': 'System;PackageManager;',
+    },
+    'Terminal': {
+      'icon': 'terminal',
+      'keywords': 'terminal;console;shell;bash;command;',
+      'mimeType': 'application/x-shell-script;',
+      'categories': 'System;TerminalEmulator;',
+    },
+    'Settings': {
+      'icon': 'settings',
+      'keywords': 'settings;preferences;configuration;control;options;',
+      'mimeType': '',
+      'categories': 'Settings;System;',
+    },
+    'Text Editor': {
+      'icon': 'edit_note',
+      'keywords': 'editor;text;notepad;code;write;',
+      'mimeType': 'text/plain;text/x-log;application/json;text/xml;',
+      'categories': 'Utility;TextEditor;',
+    },
+    'Image Viewer': {
+      'icon': 'image',
+      'keywords': 'image;photo;picture;viewer;gallery;',
+      'mimeType':
+          'image/png;image/jpeg;image/gif;image/webp;image/svg+xml;image/bmp;image/tiff;image/avif;image/heif;',
+      'categories': 'Graphics;Viewer;',
+    },
+    'Web Browser': {
+      'icon': 'language',
+      'keywords': 'browser;web;internet;html;url;',
+      'mimeType': 'text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;',
+      'categories': 'Network;WebBrowser;',
+    },
+    'Archive Manager': {
+      'icon': 'archive',
+      'keywords': 'archive;compress;zip;extract;tar;',
+      'mimeType':
+          'application/zip;application/x-tar;application/x-7z-compressed;application/x-rar-compressed;application/gzip;',
+      'categories': 'Utility;Archiving;',
+    },
+  };
 
   // DEB control fields (user-editable)
   final _versionController = TextEditingController(text: '0.1.0');
@@ -59,6 +129,8 @@ class _VaxpDebPageState extends State<VaxpDebPage>
     _nameController.dispose();
     _commentController.dispose();
     _categoriesController.dispose();
+    _keywordsController.dispose();
+    _mimeTypeController.dispose();
     _versionController.dispose();
     _sectionController.dispose();
     _priorityController.dispose();
@@ -131,6 +203,8 @@ class _VaxpDebPageState extends State<VaxpDebPage>
     _nameController.clear();
     _commentController.clear();
     _categoriesController.clear();
+    _keywordsController.clear();
+    _mimeTypeController.clear();
     _selectedTerminal = 'false';
     _autoExecPath = '';
 
@@ -162,16 +236,22 @@ class _VaxpDebPageState extends State<VaxpDebPage>
             ? '/usr/share/icons/hicolor/256x256/apps/$debName.png'
             : '/usr/share/icons/hicolor/256x256/apps/flutter_app.png';
 
-    return '''[Desktop Entry]
-Version=1.0
-Type=Application
-Name=$name
-Comment=$comment
-Exec=$exec
-Icon=$icon
-Terminal=$_selectedTerminal
-Categories=$categories
-''';
+    final keywords = _keywordsController.text.trim();
+    final mimeType = _mimeTypeController.text.trim();
+
+    final buffer = StringBuffer();
+    buffer.write('[Desktop Entry]\n');
+    buffer.write('Version=1.0\n');
+    buffer.write('Type=Application\n');
+    buffer.write('Name=$name\n');
+    buffer.write('Comment=$comment\n');
+    buffer.write('Exec=$exec\n');
+    buffer.write('Icon=$icon\n');
+    buffer.write('Terminal=$_selectedTerminal\n');
+    buffer.write('Categories=$categories\n');
+    if (keywords.isNotEmpty) buffer.write('Keywords=$keywords\n');
+    if (mimeType.isNotEmpty) buffer.write('MimeType=$mimeType\n');
+    return buffer.toString();
   }
 
   Future<void> _convertToDeb() async {
@@ -468,10 +548,209 @@ exec "./$originalExecName" "\$@"
       children: [
         _buildProjectSelectionCard(context),
         buildIconSelectionCard(context),
+        _buildAutoMimeKeywordCard(context),
         _buildDesktopEntryCard(context),
         _buildConvertButton(context),
         _buildStatusDisplay(context),
       ],
+    );
+  }
+
+  void _applyAppTypePreset(String appType) {
+    final preset = _appTypePresets[appType];
+    if (preset == null) return;
+    setState(() {
+      _selectedAppType = appType;
+      _keywordsController.text = preset['keywords'] ?? '';
+      _mimeTypeController.text = preset['mimeType'] ?? '';
+      if ((preset['categories'] ?? '').isNotEmpty) {
+        _categoriesController.text = preset['categories']!;
+      }
+      conversionStatus = 'Auto-filled preset: $appType';
+    });
+  }
+
+  IconData _presetIcon(String appType) {
+    const map = {
+      'File Manager': Icons.folder_open,
+      'Video Player': Icons.movie,
+      'Audio Player': Icons.music_note,
+      'Store': Icons.store,
+      'Terminal': Icons.terminal,
+      'Settings': Icons.settings,
+      'Text Editor': Icons.edit_note,
+      'Image Viewer': Icons.image,
+      'Web Browser': Icons.language,
+      'Archive Manager': Icons.archive,
+    };
+    return map[appType] ?? Icons.apps;
+  }
+
+  Widget _buildAutoMimeKeywordCard(BuildContext context) {
+    return MacAppStoreCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: macAppStoreBlue, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Auto MimeType & Keywords',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choose an application type to auto-fill Keywords, MimeType, and Categories',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: macAppStoreGray),
+          ),
+          const SizedBox(height: 16),
+          // Grid of preset chips
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children:
+                _appTypePresets.keys.map((appType) {
+                  final isSelected = _selectedAppType == appType;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: InkWell(
+                      onTap: () => _applyAppTypePreset(appType),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient:
+                              isSelected
+                                  ? LinearGradient(
+                                    colors: [
+                                      macAppStoreBlue,
+                                      // ignore: deprecated_member_use
+                                      macAppStoreBlue.withOpacity(0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                  : null,
+                          color: isSelected ? null : macAppStoreCard,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color:
+                                isSelected
+                                    ? macAppStoreBlue
+                                    // ignore: deprecated_member_use
+                                    : macAppStoreLightGray.withOpacity(0.3),
+                            width: isSelected ? 1.5 : 1,
+                          ),
+                          boxShadow:
+                              isSelected
+                                  ? [
+                                    BoxShadow(
+                                      // ignore: deprecated_member_use
+                                      color: macAppStoreBlue.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                  : null,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _presetIcon(appType),
+                              size: 18,
+                              color:
+                                  isSelected
+                                      ? Colors.white
+                                      : macAppStoreLightGray,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              appType,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : macAppStoreLightGray,
+                                fontWeight:
+                                    isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+          ),
+          if (_selectedAppType != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                // ignore: deprecated_member_use
+                color: macAppStoreBlue.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  // ignore: deprecated_member_use
+                  color: macAppStoreBlue.withOpacity(0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    color: macAppStoreBlue,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Applied: $_selectedAppType — Keywords & MimeType auto-filled below',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: macAppStoreBlue,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      Icons.close,
+                      size: 16,
+                      color: macAppStoreLightGray,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _selectedAppType = null;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -794,6 +1073,37 @@ exec "./$originalExecName" "\$@"
                 alignLabelWithHint: true,
               ),
               maxLines: 2,
+            ),
+            const SizedBox(height: 24),
+            // Desktop Entry optional fields
+            Text(
+              'Desktop Entry Optional Fields',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _keywordsController,
+              decoration: const InputDecoration(
+                labelText: 'Keywords',
+                hintText: 'e.g., editor;text;notepad;',
+                border: OutlineInputBorder(),
+                helperText:
+                    'Semicolon-separated keywords for application search',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _mimeTypeController,
+              decoration: const InputDecoration(
+                labelText: 'MimeType',
+                hintText: 'e.g., text/plain;image/png;',
+                border: OutlineInputBorder(),
+                helperText:
+                    'Semicolon-separated MIME types handled by the app',
+              ),
             ),
             const SizedBox(height: 16),
             Row(
